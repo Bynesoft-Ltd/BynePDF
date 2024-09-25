@@ -3,6 +3,8 @@
 BynePDF is a simple wrapper for our SOTA model Byne-LayoutLM. This model enables the retrieval of pages from visually rich documents. 
 With this library, you can implement document-understanding systems and create visual or agentic RAG pipelines with industry-leading performance for analysing documents like pitch decks, company reports or scientific papers.
 
+**Note:** Colab is the easiest way to get started since the lib is very simple.
+
 [Blog post](https://blog.bynedocs.com/layoutlm-byne-v0.1-beta-launch)
 [Huggingface](https://huggingface.co/Byne/LayoutLM-Byne-v0.1)
 [Colab](https://colab.research.google.com/drive/1YkPtCOrXdDMTv_gm14VoZeofJoNRotzO?authuser=1#scrollTo=F7UqOgtY_MjK)

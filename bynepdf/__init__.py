@@ -114,7 +114,7 @@ class PDFQueryProcessor:
 
         if self.verbose:
             print(f"Embedded page with {len(words)} words")
-        return outputs.logits.cpu().numpy()
+        return outputs.logits.cpu().numpy().squeeze()
 
     def process_pdf(self, pdf_path: str) -> Tuple[np.ndarray, List[List[str]], List[Image.Image]]:
         images = self.split_pdf_to_images(pdf_path)
@@ -141,7 +141,7 @@ class PDFQueryProcessor:
             if self.verbose:
                 print(f"Embedded query {i + 1}/{len(queries)}")
 
-        return np.array(query_embeddings).squeeze()
+        return np.array(query_embeddings)
 
     def search_relevant_pages(self, page_embeddings: np.ndarray,
                               query_embeddings: np.ndarray) -> np.ndarray:

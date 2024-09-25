@@ -47,6 +47,14 @@ pip install git+https://github.com/Bynesoft-Ltd/BynePDF.git
 
 ## Dependencies
 
+You need Poppler and Tesseract installed. You can install them by running:
+
+```bash
+apt install tesseract-ocr
+apt install libtesseract-dev
+apt install poppler-utils
+```
+
 BynePDF requires the following dependencies:
 
 - torch

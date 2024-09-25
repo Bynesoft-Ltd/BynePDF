@@ -86,7 +86,7 @@ print(f"Answer: {answer}")
 
 1. **LayoutLM-Byne**: This model is used for document and query embedding. It's pre-trained on a large corpus of document images and is specifically designed for document understanding tasks. In BynePDF, this model is non-substitutable and is always used for embedding.
 
-2. **MiniCPM**: This model is used for question answering. It takes the embedded document and query as input and generates an answer. The path to this model can be customized during initialization.
+2. **MiniCPM**: This model is used for question answering. It takes a page and query as input and generates an answer. The path to this model can be customized during initialization.
 
 ## Documentation
 

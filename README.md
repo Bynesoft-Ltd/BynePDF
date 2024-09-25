@@ -3,6 +3,32 @@
 BynePDF is a simple wrapper for our SOTA model Byne-LayoutLM. This model enables the retrieval of pages from visually rich documents. 
 With this library, you can implement document-understanding systems and create visual or agentic RAG pipelines with industry-leading performance when analysing documents like pitch decks, company reports or scientific papers.
 
+[Blog post](https://blog.bynedocs.com/layoutlm-byne-v0.1-beta-launch)
+[Huggingface](https://huggingface.co/Byne/LayoutLM-Byne-v0.1)
+[Colab](https://colab.research.google.com/drive/1YkPtCOrXdDMTv_gm14VoZeofJoNRotzO?authuser=1#scrollTo=F7UqOgtY_MjK)
+
+## Metrics
+**Retrieval:**
+
+| Model                           | HR@3           | HR@5           | HR@10          |
+|---------------------------------|----------------|----------------|----------------|
+| all-mpnet-base-v2               | 0.2500         | 0.2900         | 0.3600         |
+| gte-base-en-v1.5                | 0.3454         | 0.3899         | 0.4554         |
+| snowflake-arctic-embed-m-v1.5   | **0.3548**     | 0.4042         | 0.4573         |
+| LayoutLM-Byne (our model)       | 0.3491         | **0.4269**     | **0.5436**     |
+| Improvement over best competitor| -1.61%         | +5.62%         | +18.87%        |
+
+**Full pipeline:**
+
+| Component      | Classic RAG Pipeline                                       | LayoutLM-Byne Pipeline                |
+|----------------|------------------------------------------------------------|---------------------------------------|
+| Embedding      | Snowflake Arctic (Snowflake/snowflake-arctic-embed-m-v1.5) | LayoutLM-Byne v0.1                    |
+| QA Model       | LLaMA 3.1 70B                                              | MiniCPM-V-2_6 (openbmb/MiniCPM-V-2_6) |
+| Total Size     | ~70B parameters                                            | ~8B parameters                        |
+| HR@5           | 0.37                                                       | 0.45                                  |
+| Total Accuracy | 18%                                                        | 24%                                   |
+
+
 ## Features
 
 - PDF to image conversion
@@ -61,8 +87,6 @@ BynePDF uses the following models:
 
 - [LayoutLM-Byne v0.1](https://huggingface.co/Byne/LayoutLM-Byne-v0.1) for document embedding (non-substitutable)
 - [MiniCPM-V-2_6](https://huggingface.co/openbmb/MiniCPM-V-2_6) for question answering (default)
-
-For more information on the LayoutLM-Byne model and its performance, check out our [blog post](https://example.com/layoutlm-byne-blog-post).
 
 ## Usage Notes
 

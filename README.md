@@ -42,7 +42,7 @@ With this library, you can implement document-understanding systems and create v
 You can install BynePDF directly from GitHub using pip:
 
 ```bash
-pip install git+https://github.com/Byne/BynePDF.git
+pip install git+https://github.com/Bynesoft-Ltd/BynePDF.git
 ```
 
 ## Dependencies

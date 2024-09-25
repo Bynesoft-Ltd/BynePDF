@@ -1,5 +1,3 @@
-# bynepdf/__init__.py
-
 import torch
 from transformers import LayoutLMForSequenceClassification, AutoTokenizer, AutoModel
 from PIL import Image
@@ -8,13 +6,14 @@ from typing import List, Optional, Tuple, Union, Dict
 from pdf2image import convert_from_path
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+import warnings
 
 BYNE_LAYOUTLM_PATH = 'Byne/LayoutLM-Byne-v0.1'
 
 
 class PDFQueryProcessor:
     def __init__(self, minicpm_path: str = 'openbmb/MiniCPM-V-2_6', device: Optional[str] = None,
-                 verbose: bool = False):
+                 verbose: bool = False, load_minicpm: bool = True):
         self.verbose = verbose
         self.device = self._get_device(device)
 
@@ -24,10 +23,17 @@ class PDFQueryProcessor:
             self.device).eval()
 
         # MiniCPM setup
-        self.minicpm_tokenizer = AutoTokenizer.from_pretrained(minicpm_path, trust_remote_code=True)
-        self.minicpm_model = AutoModel.from_pretrained(minicpm_path, trust_remote_code=True,
-                                                       attn_implementation='sdpa', torch_dtype=torch.bfloat16).to(
-            self.device).eval()
+        self.minicpm_tokenizer = None
+        self.minicpm_model = None
+        self.load_minicpm = load_minicpm
+
+        if load_minicpm:
+            self.minicpm_tokenizer = AutoTokenizer.from_pretrained(minicpm_path, trust_remote_code=True)
+            self.minicpm_model = AutoModel.from_pretrained(minicpm_path, trust_remote_code=True,
+                                                           attn_implementation='sdpa', torch_dtype=torch.bfloat16).to(
+                self.device).eval()
+        else:
+            warnings.warn("MiniCPM is not loaded. The pipeline will return raw text for relevant pages instead of answering questions.")
 
     def _get_device(self, device: Optional[str]) -> torch.device:
         if device is None:
@@ -110,18 +116,20 @@ class PDFQueryProcessor:
             print(f"Embedded page with {len(words)} words")
         return outputs.logits.cpu().numpy()
 
-    def process_pdf(self, pdf_path: str) -> np.ndarray:
+    def process_pdf(self, pdf_path: str) -> Tuple[np.ndarray, List[List[str]], List[Image.Image]]:
         images = self.split_pdf_to_images(pdf_path)
         page_embeddings = []
+        all_words = []
 
         for i, image in enumerate(images):
             words, boxes = self.apply_tesseract(image)
             embedding = self.embed_page(words, boxes)
             page_embeddings.append(embedding)
+            all_words.append(words)
             if self.verbose:
                 print(f"Processed page {i + 1}/{len(images)}")
 
-        return np.array(page_embeddings).squeeze()
+        return np.array(page_embeddings).squeeze(), all_words, images
 
     def embed_queries(self, queries: List[str]) -> np.ndarray:
         query_embeddings = []
@@ -143,7 +151,10 @@ class PDFQueryProcessor:
             print(f"Computed relevance for {len(query_embeddings)} queries and {len(page_embeddings)} pages")
         return relevant_page_indices
 
-    def answer_question(self, page_image: Image.Image, query: str) -> str:
+    def answer_question(self, page_image: Image.Image, page_words: List[str], query: str) -> str:
+        if not self.load_minicpm:
+            return ' '.join(page_words)
+
         image = page_image.convert('RGB')
         prompt = f"Question: {query}\n\nAnswer:"
         msgs = [{'role': 'user', 'content': [image, prompt]}]
@@ -159,7 +170,7 @@ class PDFQueryProcessor:
 
     def process_query(self, pdf_path: str, query: str) -> str:
         # Process PDF
-        page_embeddings = self.process_pdf(pdf_path)
+        page_embeddings, all_words, images = self.process_pdf(pdf_path)
 
         # Embed query
         query_embedding = self.embed_queries([query])
@@ -167,16 +178,15 @@ class PDFQueryProcessor:
         # Search for relevant page
         relevant_page_index = self.search_relevant_pages(page_embeddings, query_embedding)[0][0]
 
-        # Get the relevant page image
-        relevant_page_image = self.split_pdf_to_images(pdf_path)[relevant_page_index]
+        # Get the relevant page image and words
+        relevant_page_image = images[relevant_page_index]
+        relevant_page_words = all_words[relevant_page_index]
 
-        # Answer the question using MiniCPM
-        answer = self.answer_question(relevant_page_image, query)
-
-        return answer
+        # Answer the question using MiniCPM or return raw text
+        return self.answer_question(relevant_page_image, relevant_page_words, query)
 
 # Usage example:
-# processor = PDFQueryProcessor(verbose=True)
+# processor = PDFQueryProcessor(verbose=True, load_minicpm=False)  # Set load_minicpm to False to skip loading MiniCPM
 # pdf_path = 'path/to/your/pdf'
 # query = "What is the main topic of this document?"
 # answer = processor.process_query(pdf_path, query)
